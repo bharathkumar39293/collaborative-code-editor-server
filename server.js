@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5175",
+    origin: "http://localhost:5175", // Update this in production to your frontend URL
     methods: ["GET", "POST"],
   },
 });
@@ -21,7 +21,7 @@ function getAllConnectedClients(roomId) {
 }
 
 io.on('connection', (socket) => {
-  console.log('socket connected', socket.id);
+  console.log('Socket connected:', socket.id);
 
   socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
     if (!username || username.trim() === "") {
@@ -58,8 +58,21 @@ io.on('connection', (socket) => {
         username: userSocketMap[socket.id],
       });
     });
+    console.log('Socket disconnecting:', socket.id);
     delete userSocketMap[socket.id];
   });
+
+  socket.on('disconnect', (reason) => {
+    console.log(`Socket disconnected: ${socket.id}, reason: ${reason}`);
+  });
+
+  socket.on('connect_error', (err) => {
+    console.error(`Connection error on socket ${socket.id}: ${err.message}`);
+  });
+});
+
+io.engine.on('connection_error', (err) => {
+  console.error('Engine connection error:', err.message);
 });
 
 // Simple root endpoint for health check or basic info
